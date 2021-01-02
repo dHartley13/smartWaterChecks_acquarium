@@ -29,7 +29,11 @@ def read_temp():
         temp_f = temp_c * 9.0 / 5.0 + 32.0
         ts = datetime.dateime.utcnow().isoformat()
 
+<<<<<<< HEAD
 
+=======
+        #convert to json
+>>>>>>> testBranch
         _temp = json.dumps({'degreesCelcius':temp_c, 'degreesFarenheit': temp_f, 'ts':ts})
         return _temp
 
