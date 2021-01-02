@@ -28,7 +28,8 @@ def read_temp():
         temp_c = float(temp_string) / 1000
         temp_f = temp_c * 9.0 / 5.0 + 32.0
         ts = datetime.dateime.utcnow().isoformat()
-        
+
+        #convert to json
         _temp = json.dumps({'degreesCelcius':temp_c, 'degreesFarenheit': temp_f, 'ts':ts})
         return _temp
 
