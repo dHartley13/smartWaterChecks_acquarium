@@ -2,7 +2,16 @@ import os
 import glob
 import time
 import json
-import datetime 
+import datetime
+import dash
+from dash.dependencies import Output, Input
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly
+import random
+import plotly.graph_objs as go
+from collections import deque
+from dataclasses import dataclass
 
 os.system('modprobe w1-gpio')
 os.system('modprobe w1-therm')
@@ -10,6 +19,28 @@ os.system('modprobe w1-therm')
 base_dir = '/sys/bus/w1/devices/'
 device_folder = glob.glob(base_dir + '28*')[0]
 device_file = device_folder ='w1_slave'
+
+X = deque(maxlen=100)
+Y = deque(maxlen=100)
+app = dash.Dash(__name__)
+
+app.layout = html.Div(
+    [
+        dcc.Graph(id='live-graph', animate=True),
+        dcc.Interval(
+            id='graph-update',
+            interval=1000,
+            n_intervals=0
+        ),
+    ]
+)
+
+@dataclass(unsafe_hash=True)
+class TemperatureItem:
+    '''Class for keeping track of an item in inventory.'''
+    degrees_celcius: float
+    degrees_fahrenheit: float
+    ts: int
 
 def read_temp_raw():
     f = open(device_file, 'r')
@@ -27,17 +58,32 @@ def read_temp():
         temp_string = lines[1][equals_pos+2:]
         temp_c = float(temp_string) / 1000
         temp_f = temp_c * 9.0 / 5.0 + 32.0
-        ts = datetime.dateime.utcnow().isoformat()
-
-<<<<<<< HEAD
-
-=======
-        #convert to json
->>>>>>> testBranch
+        ts = int(datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S'))
+        _temp = TemperatureItem(temp_c,temp_f,ts)
         _temp = json.dumps({'degreesCelcius':temp_c, 'degreesFarenheit': temp_f, 'ts':ts})
         return _temp
+    # return TemperatureItem(random.uniform(0,1),random.uniform(0,1),int(datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')))
 
-while True:
-    print(read_temp)
-    time.sleep(1)
+@app.callback(
+    Output('live-graph', 'figure'),
+    [Input('graph-update', 'n_intervals')]
+)
+def update_graph_scatter(n):
+    temp: TemperatureItem = read_temp()
+    X.append(temp.ts)
+    Y.append(temp.degrees_celcius)
+    print(Y)
+    print(X)
+
+    data = plotly.graph_objs.Scatter(
+        x=list(X),
+        y=list(Y),
+        name='Scatter',
+        mode='lines+markers'
+    )
+
+    return {'data': [data],
+            'layout': go.Layout(xaxis=dict(range=[min(X), max(X)]), yaxis=dict(range=[min(Y), max(Y)]), )}
     
+if __name__ == '__main__':
+    app.run_server()
