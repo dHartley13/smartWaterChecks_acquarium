@@ -18,7 +18,8 @@ os.system('modprobe w1-therm')
 
 base_dir = '/sys/bus/w1/devices/'
 device_folder = glob.glob(base_dir + '28*')[0]
-device_file = device_folder ='w1_slave'
+#device_file = device_folder ='w1_slave'
+device_file = '/sys/bus/w1/devices/28-3c01d607eefb/w1_slave'
 
 X = deque(maxlen=100)
 Y = deque(maxlen=100)
@@ -29,7 +30,7 @@ app.layout = html.Div(
         dcc.Graph(id='live-graph', animate=True),
         dcc.Interval(
             id='graph-update',
-            interval=1000,
+            interval=60000,
             n_intervals=0
         ),
     ]
@@ -44,7 +45,8 @@ class TemperatureItem:
 
 def read_temp_raw():
     f = open(device_file, 'r')
-    lines = f.readLines()
+    #lines = f.readLines()
+    lines = list(f)
     f.close()
     return lines
 
@@ -60,7 +62,6 @@ def read_temp():
         temp_f = temp_c * 9.0 / 5.0 + 32.0
         ts = int(datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S'))
         _temp = TemperatureItem(temp_c,temp_f,ts)
-        _temp = json.dumps({'degreesCelcius':temp_c, 'degreesFarenheit': temp_f, 'ts':ts})
         return _temp
     # return TemperatureItem(random.uniform(0,1),random.uniform(0,1),int(datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')))
 
