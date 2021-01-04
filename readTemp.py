@@ -13,6 +13,7 @@ import plotly.graph_objs as go
 from collections import deque
 from dataclasses import dataclass
 
+
 os.system('modprobe w1-gpio')
 os.system('modprobe w1-therm')
 
@@ -44,24 +45,28 @@ class TemperatureItem:
     ts: int
 
 def read_temp_raw():
-    f = open(device_file, 'r')
-    #lines = f.readLines()
-    lines = list(f)
-    f.close()
+    with open(device_file, 'r') as file:
+        lines = file.readlines()
+    file.close()
+    print(lines)
     return lines
 
 def read_temp():
+    print("read temp")
     lines = read_temp_raw()
     while lines[0].strip()[-3] != 'YES':
         time.sleep(0.2)
         lines = read_temp_raw()
     equal_pos = lines[1].find('t=')
+    print("in the while")
     if equal_pos != -1:
+        print("in the if")
         temp_string = lines[1][equals_pos+2:]
         temp_c = float(temp_string) / 1000
         temp_f = temp_c * 9.0 / 5.0 + 32.0
         ts = int(datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S'))
         _temp = TemperatureItem(temp_c,temp_f,ts)
+        #_temp = json.dumps({'degreesCelcius':temp_c, 'degreesFarenheit': temp_f, 'ts':ts})
         return _temp
     # return TemperatureItem(random.uniform(0,1),random.uniform(0,1),int(datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')))
 
@@ -85,6 +90,9 @@ def update_graph_scatter(n):
 
     return {'data': [data],
             'layout': go.Layout(xaxis=dict(range=[min(X), max(X)]), yaxis=dict(range=[min(Y), max(Y)]), )}
-    
-if __name__ == '__main__':
-    app.run_server()
+
+while TRUE:
+    print(read_temp().ts)
+
+#if __name__ == '__main__':
+#    app.run_server()
