@@ -19,7 +19,6 @@ os.system('modprobe w1-therm')
 
 base_dir = '/sys/bus/w1/devices/'
 device_folder = glob.glob(base_dir + '28*')[0]
-#device_file = device_folder ='w1_slave'
 device_file = '/sys/bus/w1/devices/28-3c01d607eefb/w1_slave'
 
 X = deque(maxlen=100)
@@ -46,21 +45,17 @@ class TemperatureItem:
 
 def read_temp_raw():
     with open(device_file, 'r') as file:
-        lines = file.readlines()
-    file.close()
-    print(lines)
+        lines = list(file.readlines())
     return lines
 
 def read_temp():
-    print("read temp")
     lines = read_temp_raw()
-    while lines[0].strip()[-3] != 'YES':
+    while lines[0].strip()[-3:] != 'YES':
         time.sleep(0.2)
         lines = read_temp_raw()
-    equal_pos = lines[1].find('t=')
-    print("in the while")
-    if equal_pos != -1:
-        print("in the if")
+    equals_pos = lines[1].find('t=')
+    if equals_pos != -1:
+        #print("in the if")
         temp_string = lines[1][equals_pos+2:]
         temp_c = float(temp_string) / 1000
         temp_f = temp_c * 9.0 / 5.0 + 32.0
@@ -91,8 +86,8 @@ def update_graph_scatter(n):
     return {'data': [data],
             'layout': go.Layout(xaxis=dict(range=[min(X), max(X)]), yaxis=dict(range=[min(Y), max(Y)]), )}
 
-while TRUE:
-    print(read_temp().ts)
+#while True:
+#    print(read_temp().ts)
 
-#if __name__ == '__main__':
-#    app.run_server()
+if __name__ == '__main__':
+    app.run_server()
