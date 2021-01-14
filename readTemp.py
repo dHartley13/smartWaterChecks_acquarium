@@ -12,29 +12,18 @@ import random
 import plotly.graph_objs as go
 from collections import deque
 from dataclasses import dataclass
+import flask
 
 
 os.system('modprobe w1-gpio')
 os.system('modprobe w1-therm')
 
-base_dir = '/sys/bus/w1/devices/'
-device_folder = glob.glob(base_dir + '28*')[0]
 device_file = '/sys/bus/w1/devices/28-3c01d607eefb/w1_slave'
 
 X = deque(maxlen=100)
 Y = deque(maxlen=100)
-app = dash.Dash(__name__)
-
-app.layout = html.Div(
-    [
-        dcc.Graph(id='live-graph', animate=True),
-        dcc.Interval(
-            id='graph-update',
-            interval=60000,
-            n_intervals=0
-        ),
-    ]
-)
+server = flask.Flask(__name__)
+server.config["DEBUG"] = True
 
 @dataclass(unsafe_hash=True)
 class TemperatureItem:
@@ -60,34 +49,20 @@ def read_temp():
         temp_c = float(temp_string) / 1000
         temp_f = temp_c * 9.0 / 5.0 + 32.0
         ts = int(datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S'))
-        _temp = TemperatureItem(temp_c,temp_f,ts)
-        #_temp = json.dumps({'degreesCelcius':temp_c, 'degreesFarenheit': temp_f, 'ts':ts})
+        
+        #Changed output to return dict so i get a response when i curl localhost
+        _temp = {
+            "Celsius": temp_c,
+            "Farenheit":temp_f,
+            "ts":ts
+            }
         return _temp
-    # return TemperatureItem(random.uniform(0,1),random.uniform(0,1),int(datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')))
 
-@app.callback(
-    Output('live-graph', 'figure'),
-    [Input('graph-update', 'n_intervals')]
-)
-def update_graph_scatter(n):
-    temp: TemperatureItem = read_temp()
-    X.append(temp.ts)
-    Y.append(temp.degrees_celcius)
-    print(Y)
-    print(X)
+@server.route('/', methods=['GET', 'POST'])
+def home():
+    return read_temp()
 
-    data = plotly.graph_objs.Scatter(
-        x=list(X),
-        y=list(Y),
-        name='Scatter',
-        mode='lines+markers'
-    )
-
-    return {'data': [data],
-            'layout': go.Layout(xaxis=dict(range=[min(X), max(X)]), yaxis=dict(range=[min(Y), max(Y)]), )}
-
-#while True:
-#    print(read_temp().ts)
 
 if __name__ == '__main__':
-    app.run_server()
+    server.run()    
+ 
