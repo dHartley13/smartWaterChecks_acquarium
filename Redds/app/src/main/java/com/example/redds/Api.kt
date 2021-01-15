@@ -6,11 +6,6 @@ import retrofit2.http.Query
 
 interface Api {
 
-    fun <T> lazy(
-        mode: LazyThreadSafetyMode,
-        initializer: () -> T
-    ): Lazy<T>
-
     @GET("readTemp")
     fun readTemp(
         @Query("degreesCelsius") degreesCelsius: Float.Companion,

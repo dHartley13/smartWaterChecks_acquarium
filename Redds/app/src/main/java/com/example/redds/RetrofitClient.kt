@@ -12,7 +12,7 @@ import retrofit2.http.Query
 
 object RetrofitClient {
 
-    val instance : Api by Lazy {
+    val instance : Api {
 
         val retrofit = Retrofit.Builder()
             .baseUrl("<enter base url here>")
